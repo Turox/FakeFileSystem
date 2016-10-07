@@ -2,7 +2,6 @@ package Helper;
 
 import Fake.FakeFile;
 import Fake.FakeFileSystem;
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.attribute.PosixFilePermission;
@@ -11,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -136,26 +136,32 @@ public class Helper {
     public static ArrayList<String> getCommandsDump(FakeFile cur, String path) {
         FakeFile[] files = cur.listFiles();
         if (cur.isDirectory()) {
-            if (!cur.isHidden()) {
+            if (!cur.isHidden() && !path.equals("./")) {
                 Helper.cmds.add("mkdir " + path);
+                Helper.cmds.add("chmod " + cur.chmod + " " + path);
             }
         }
         for (FakeFile f : files) {
             if (f.isDirectory()) {
                 Helper.getCommandsDump(f, path + f.getName() + "/");
             } else {
-                Helper.cmds.add("createfile " + path + f.getName());
+                try {
+                    Helper.cmds.add("createfile " + path + f.getName() + " " + StringEscapeUtils.escapeJava(new String(f.data)));
+                    Helper.cmds.add("chmod " + f.chmod + " " + path + f.getName());
+                } catch (Exception e) {
+                    //we should never reach this point
+                }
             }
         }
         return Helper.cmds;
     }
-    
+
     public static void massReplacePathField(FakeFile all_mighty_father, String find, String replace) {
-        FakeFile[] files = all_mighty_father.listFiles();      
+        FakeFile[] files = all_mighty_father.listFiles();
         for (FakeFile f : files) {
             all_mighty_father.child.remove(f.getPathField());
-            if (f.isDirectory()) {                
-                f.setPathField(f.getPathField().replace(find, replace));                
+            if (f.isDirectory()) {
+                f.setPathField(f.getPathField().replace(find, replace));
                 massReplacePathField(f, find, replace);
             } else {
                 f.setPathField(f.getPathField().replace(find, replace));
@@ -163,7 +169,6 @@ public class Helper {
             all_mighty_father.child.put(f.getPathField(), f);
         }
     }
-    
 
     public static Fake.FakeFileSystem fs = new FakeFileSystem();
 }

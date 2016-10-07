@@ -180,7 +180,7 @@ public class FakeFileSystem {
         return !fake.isDirectory;
     }
 
-    public boolean isHidden(FakeFile fake) {
+    public boolean isHidden(FakeFile fake) {        
         return fake.getPathField().charAt(0) == '.';
     }
 
